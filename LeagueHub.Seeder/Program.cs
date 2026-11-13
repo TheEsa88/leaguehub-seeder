@@ -33,6 +33,8 @@ await EnsurePlayerAsync(kouvolanKiekko.Id, "Kaisa Kiekkonen", 7);
 await EnsureMatchAsync(mikkelinMyrsky.Id, kouvolanKiekko.Id, DateTime.UtcNow.AddDays(-2));
 await EnsureMatchAsync(kouvolanKiekko.Id, savonlinnanSahly.Id, DateTime.UtcNow.AddDays(7));
 
+await VerifyAsync();
+
 async Task<TeamDto> EnsureTeamAsync(string name, string city, int maxRoster)
 {
     List<TeamDto> teams = await client.GetFromJsonAsync<List<TeamDto>>("api/teams", jsonOptions) ?? [];
@@ -100,6 +102,57 @@ async Task<MatchDto> EnsureMatchAsync(int homeTeamId, int awayTeamId, DateTime s
     MatchDto created = (await response.Content.ReadFromJsonAsync<MatchDto>(jsonOptions))!;
     Console.WriteLine($"luotiin ottelu  {homeTeamId}-{awayTeamId}  id={created.Id}");
     return created;
+}
+
+async Task VerifyAsync()
+{
+    List<TeamDto> teams = await client.GetFromJsonAsync<List<TeamDto>>("api/teams", jsonOptions) ?? [];
+    string[] teamNames = ["Mikkelin Myrsky", "Kouvolan Kiekko", "Savonlinnan Sähly"];
+    List<string> missing = [];
+
+    foreach (string name in teamNames)
+    {
+        if (teams.All(t => t.Name != name))
+            missing.Add($"joukkue {name}");
+    }
+
+    TeamDto? myrskyNow = teams.FirstOrDefault(t => t.Name == "Mikkelin Myrsky");
+    TeamDto? kiekkoNow = teams.FirstOrDefault(t => t.Name == "Kouvolan Kiekko");
+    TeamDto? sahlyNow = teams.FirstOrDefault(t => t.Name == "Savonlinnan Sähly");
+
+    int playersOk = 0;
+    if (myrskyNow is not null && kiekkoNow is not null)
+    {
+        List<PlayerDto> myrskyPlayers = await client.GetFromJsonAsync<List<PlayerDto>>(
+            $"api/teams/{myrskyNow.Id}/players", jsonOptions) ?? [];
+        List<PlayerDto> kiekkoPlayers = await client.GetFromJsonAsync<List<PlayerDto>>(
+            $"api/teams/{kiekkoNow.Id}/players", jsonOptions) ?? [];
+
+        if (myrskyPlayers.Any(p => p.Name == "Matti Meikäläinen")) playersOk++;
+        else missing.Add("pelaaja Matti Meikäläinen");
+        if (myrskyPlayers.Any(p => p.Name == "Teppo Testaaja")) playersOk++;
+        else missing.Add("pelaaja Teppo Testaaja");
+        if (kiekkoPlayers.Any(p => p.Name == "Kaisa Kiekkonen")) playersOk++;
+        else missing.Add("pelaaja Kaisa Kiekkonen");
+    }
+
+    int matchesOk = 0;
+    if (myrskyNow is not null && kiekkoNow is not null && sahlyNow is not null)
+    {
+        List<MatchDto> matches = await client.GetFromJsonAsync<List<MatchDto>>("api/matches", jsonOptions) ?? [];
+        if (matches.Any(m => m.HomeTeamId == myrskyNow.Id && m.AwayTeamId == kiekkoNow.Id)) matchesOk++;
+        else missing.Add("ottelu Myrsky-Kiekko");
+        if (matches.Any(m => m.HomeTeamId == kiekkoNow.Id && m.AwayTeamId == sahlyNow.Id)) matchesOk++;
+        else missing.Add("ottelu Kiekko-Sahly");
+    }
+
+    int teamsOk = teams.Count(t => teamNames.Contains(t.Name));
+    Console.WriteLine($"joukkueet {teamsOk}/3, pelaajat {playersOk}/3, ottelut {matchesOk}/2");
+
+    if (missing.Count > 0)
+    {
+        throw new InvalidOperationException("Puuttuu: " + string.Join(", ", missing));
+    }
 }
 
 record TeamDto(int Id, string Name, string City, int MaxRoster);
