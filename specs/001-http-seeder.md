@@ -22,6 +22,7 @@
 | Käynnistys ei lisää demojoukkueita | API `Program.cs` | Käynnistys ajaa vain migraation. |
 | Taulut | Migraatio | Skeema ei ole demodataa. |
 | Ajo tarkistaa rivit | Seeder, GET | Tarkistus kulkee saman rajan yli kuin luonti. |
+| Reitti on /api/v1 | API, controllerin `[Route]` | Versio on HTTP-sopimus. Domain ei tiedä siitä. |
 
 ## Hyväksymiskriteerit
 

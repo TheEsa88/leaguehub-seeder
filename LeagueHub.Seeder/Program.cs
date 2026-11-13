@@ -37,7 +37,7 @@ await VerifyAsync();
 
 async Task<TeamDto> EnsureTeamAsync(string name, string city, int maxRoster)
 {
-    List<TeamDto> teams = await client.GetFromJsonAsync<List<TeamDto>>("api/teams", jsonOptions) ?? [];
+    List<TeamDto> teams = await client.GetFromJsonAsync<List<TeamDto>>("api/v1/teams", jsonOptions) ?? [];
     TeamDto? existing = teams.FirstOrDefault(t => t.Name == name);
     if (existing is not null)
     {
@@ -46,11 +46,11 @@ async Task<TeamDto> EnsureTeamAsync(string name, string city, int maxRoster)
     }
 
     using HttpResponseMessage response = await client.PostAsJsonAsync(
-        "api/teams", new { name, city, maxRoster });
+        "api/v1/teams", new { name, city, maxRoster });
     if (!response.IsSuccessStatusCode)
     {
         string body = await response.Content.ReadAsStringAsync();
-        throw new InvalidOperationException($"POST api/teams {(int)response.StatusCode} {body}");
+        throw new InvalidOperationException($"POST api/v1/teams {(int)response.StatusCode} {body}");
     }
 
     TeamDto created = (await response.Content.ReadFromJsonAsync<TeamDto>(jsonOptions))!;
@@ -60,7 +60,7 @@ async Task<TeamDto> EnsureTeamAsync(string name, string city, int maxRoster)
 
 async Task<PlayerDto> EnsurePlayerAsync(int teamId, string name, int number)
 {
-    string path = $"api/teams/{teamId}/players";
+    string path = $"api/v1/teams/{teamId}/players";
     List<PlayerDto> players = await client.GetFromJsonAsync<List<PlayerDto>>(path, jsonOptions) ?? [];
     PlayerDto? existing = players.FirstOrDefault(p => p.Name == name);
     if (existing is not null)
@@ -83,7 +83,7 @@ async Task<PlayerDto> EnsurePlayerAsync(int teamId, string name, int number)
 
 async Task<MatchDto> EnsureMatchAsync(int homeTeamId, int awayTeamId, DateTime scheduledAt)
 {
-    List<MatchDto> matches = await client.GetFromJsonAsync<List<MatchDto>>("api/matches", jsonOptions) ?? [];
+    List<MatchDto> matches = await client.GetFromJsonAsync<List<MatchDto>>("api/v1/matches", jsonOptions) ?? [];
     MatchDto? existing = matches.FirstOrDefault(m => m.HomeTeamId == homeTeamId && m.AwayTeamId == awayTeamId);
     if (existing is not null)
     {
@@ -92,11 +92,11 @@ async Task<MatchDto> EnsureMatchAsync(int homeTeamId, int awayTeamId, DateTime s
     }
 
     using HttpResponseMessage response = await client.PostAsJsonAsync(
-        "api/matches", new { homeTeamId, awayTeamId, scheduledAt });
+        "api/v1/matches", new { homeTeamId, awayTeamId, scheduledAt });
     if (!response.IsSuccessStatusCode)
     {
         string body = await response.Content.ReadAsStringAsync();
-        throw new InvalidOperationException($"POST api/matches {(int)response.StatusCode} {body}");
+        throw new InvalidOperationException($"POST api/v1/matches {(int)response.StatusCode} {body}");
     }
 
     MatchDto created = (await response.Content.ReadFromJsonAsync<MatchDto>(jsonOptions))!;
@@ -106,7 +106,7 @@ async Task<MatchDto> EnsureMatchAsync(int homeTeamId, int awayTeamId, DateTime s
 
 async Task VerifyAsync()
 {
-    List<TeamDto> teams = await client.GetFromJsonAsync<List<TeamDto>>("api/teams", jsonOptions) ?? [];
+    List<TeamDto> teams = await client.GetFromJsonAsync<List<TeamDto>>("api/v1/teams", jsonOptions) ?? [];
     string[] teamNames = ["Mikkelin Myrsky", "Kouvolan Kiekko", "Savonlinnan Sähly"];
     List<string> missing = [];
 
@@ -124,9 +124,9 @@ async Task VerifyAsync()
     if (myrskyNow is not null && kiekkoNow is not null)
     {
         List<PlayerDto> myrskyPlayers = await client.GetFromJsonAsync<List<PlayerDto>>(
-            $"api/teams/{myrskyNow.Id}/players", jsonOptions) ?? [];
+            $"api/v1/teams/{myrskyNow.Id}/players", jsonOptions) ?? [];
         List<PlayerDto> kiekkoPlayers = await client.GetFromJsonAsync<List<PlayerDto>>(
-            $"api/teams/{kiekkoNow.Id}/players", jsonOptions) ?? [];
+            $"api/v1/teams/{kiekkoNow.Id}/players", jsonOptions) ?? [];
 
         if (myrskyPlayers.Any(p => p.Name == "Matti Meikäläinen")) playersOk++;
         else missing.Add("pelaaja Matti Meikäläinen");
@@ -139,7 +139,7 @@ async Task VerifyAsync()
     int matchesOk = 0;
     if (myrskyNow is not null && kiekkoNow is not null && sahlyNow is not null)
     {
-        List<MatchDto> matches = await client.GetFromJsonAsync<List<MatchDto>>("api/matches", jsonOptions) ?? [];
+        List<MatchDto> matches = await client.GetFromJsonAsync<List<MatchDto>>("api/v1/matches", jsonOptions) ?? [];
         if (matches.Any(m => m.HomeTeamId == myrskyNow.Id && m.AwayTeamId == kiekkoNow.Id)) matchesOk++;
         else missing.Add("ottelu Myrsky-Kiekko");
         if (matches.Any(m => m.HomeTeamId == kiekkoNow.Id && m.AwayTeamId == sahlyNow.Id)) matchesOk++;
