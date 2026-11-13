@@ -1,12 +1,23 @@
-﻿// OSIO 6: lue ApiBaseUrl appsettings.jsonista (ja valinnainen appsettings.local.json).
-// Tulosta kohdeosoite.
-//
-// OSIO 7: varmista joukkueet, pelaajat ja ottelut HTTP:llä.
-// Loki jokaisesta rivistä: "luotiin" tai "oli jo", nimi ja tämän ympäristön id.
-// Avain on joukkueen nimi, pelaajan nimi rosterissa tai ottelupari — ei arvattu id 1.
-//
-// OSIO 8: hae listat GET:llä ja vertaa ne specin nimiin.
-// Jos jokin puuttuu, kirjoita mikä ja päätä prosessi virhekoodiin.
-// Yhteenveto onnistuessa: joukkueet 3/3, pelaajat 3/3, ottelut 2/2.
+﻿using System.Net.Http.Json;
+using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 
-Console.WriteLine("LeagueHub.Seeder ei vielä kutsu APIa. OSIO 6 täyttää tämän tiedoston.");
+JsonSerializerOptions jsonOptions = new()
+{
+    PropertyNameCaseInsensitive = true
+};
+
+IConfiguration config = new ConfigurationBuilder()
+    .SetBasePath(AppContext.BaseDirectory)
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("appsettings.local.json", optional: true)
+    .Build();
+
+string baseUrl = config["ApiBaseUrl"] ?? throw new InvalidOperationException("ApiBaseUrl puuttuu.");
+
+using HttpClient client = new()
+{
+    BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/")
+};
+
+Console.WriteLine($"Kohde {client.BaseAddress}");
