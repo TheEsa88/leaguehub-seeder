@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LeagueHub.Api.Controllers;
 
 [ApiController]
-[Route("api/teams")] // OSIO 10: vaihda polku muotoon api/v1/teams. Päivitä myös Created-osoite.
+[Route("api/v1/teams")]
 public class TeamsController : ControllerBase
 {
     private readonly GetTeamsUseCase _getTeams;
@@ -31,7 +31,7 @@ public class TeamsController : ControllerBase
         try
         {
             Team created = await _createTeam.ExecuteAsync(request.Name, request.City, request.MaxRoster);
-            return Created($"/api/teams/{created.Id}", created);
+            return Created($"/api/v1/teams/{created.Id}", created);
         }
         catch (DomainException ex)
         {

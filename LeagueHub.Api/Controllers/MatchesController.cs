@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LeagueHub.Api.Controllers;
 
 [ApiController]
-[Route("api/matches")] // OSIO 10: vaihda polku muotoon api/v1/matches.
+[Route("api/v1/matches")]
 public class MatchesController : ControllerBase
 {
     private readonly GetMatchesUseCase _getMatches;
@@ -34,7 +34,7 @@ public class MatchesController : ControllerBase
             Match created = await _createMatch.ExecuteAsync(
                 request.HomeTeamId, request.AwayTeamId, request.ScheduledAt);
 
-            return Created($"/api/matches/{created.Id}", created);
+            return Created($"/api/v1/matches/{created.Id}", created);
         }
         catch (DomainException ex)
         {

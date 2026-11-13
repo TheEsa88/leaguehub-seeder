@@ -28,11 +28,10 @@ builder.Services.AddScoped<CreateMatchUseCase>();
 
 WebApplication app = builder.Build();
 
-// OSIO 9: jätä MigrateAsync, poista demokylvö. DbSeeder.cs poistuu.
 using (IServiceScope scope = app.Services.CreateScope())
 {
     LeagueHubDbContext db = scope.ServiceProvider.GetRequiredService<LeagueHubDbContext>();
-    await DbSeeder.SeedAsync(db);
+    await db.Database.MigrateAsync();
 }
 
 if (app.Environment.IsDevelopment())
