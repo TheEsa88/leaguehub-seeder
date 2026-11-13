@@ -1,0 +1,10 @@
+# OSIO 1: nämä jäävät pois GitHubista.
+# *.db on paikallinen kanta. appsettings.local.json on konekohtainen osoite ja token.
+*.db
+*.db-shm
+*.db-wal
+appsettings.local.json
+bin/
+obj/
+.vs/
+*.user
